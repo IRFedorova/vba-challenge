@@ -1,0 +1,126 @@
+Sub Year_Stock()
+ 
+ 'Dim ws As Worksheet
+ Dim Percent_Change As Double
+ Dim Year_Change As Double
+ Dim Ticker_Total As Double
+ Dim Summary_Table_Row As Integer
+ Dim Start As Long
+
+    
+ 'Loop through all sheets
+ For Each ws In Worksheets
+ 
+ 'Headers for a new table
+ ws.Range("I1").Value = "Ticker"
+ ws.Range("J1").Value = "Year Change"
+ ws.Range("K1").Value = "Percent Change"
+ ws.Range("L1").Value = "Total Stock Volume"
+ 'Headers for the 3rd table
+ ws.Range("P1").Value = "Ticker"
+ ws.Range("Q1").Value = "Value"
+ ws.Range("O2").Value = "Greatest %Increase"
+ ws.Range("O3").Value = "Greatest %Decrease"
+ ws.Range("O4").Value = "Greatest Total Volume"
+   
+ ' setting initial values for variable
+ Year_Change = 0
+ percentage_Change = 0
+ Ticker_Total = 0
+ Summary_Table_Row = 2
+ Start = 2
+ 
+ 'Determine the last row
+ LastRow = ws.Cells(Rows.Count, 1).End(xlUp).Row
+        
+ For i = 2 To LastRow
+ 
+ If ws.Cells(i, 1).Value = ws.Cells(i + 1, 1).Value Then
+        'MsgBox (Ticker_Total)
+ 
+        ' Adding Up Total Ticker Volume for the same Ticker
+        Ticker_Total = Ticker_Total + ws.Cells(i, 7).Value
+ 
+   Else
+    Ticker_Total = Ticker_Total + ws.Cells(i, 7).Value
+    
+    If Ticker_Total = 0 Then
+    
+        'print Values to a Summary table
+        ws.Range("I" & Summary_Table_Row).Value = ws.Cells(i, 1).Value
+        ws.Range("J" & Summary_Table_Row).Value = 0
+        ws.Range("K" & Summary_Table_Row).Value = 0
+        ws.Range("L" & Summary_Table_Row).Value = 0
+        
+        Else
+        'Find first trade
+        If ws.Cells(Start, 3) = 0 Then
+            For find_value = Start To i
+                If ws.Cells(find_value, 3).Value <> 0 Then
+                    Start = find_value
+                    Exit For
+                End If
+            Next find_value
+        End If
+                 
+             
+        'calculate changes
+        Year_Change = ws.Cells(i, 6) - ws.Cells(Start, 3)
+        percentage_Change = Round((Year_Change / ws.Cells(Start, 3)) * 100, 2)
+        Start = i + 1
+        
+        'print New Values to Summary table
+        ws.Range("I" & Summary_Table_Row).Value = ws.Cells(i, 1).Value
+        ws.Range("J" & Summary_Table_Row).Value = Round(Year_Change, 2)
+        ws.Range("K" & Summary_Table_Row).Value = "%" & percentage_Change
+        
+        ws.Range("L" & Summary_Table_Row).Value = Ticker_Total
+        
+        'Color Year_Change
+        
+        If Year_Change > 0 Then
+            ws.Range("J" & Summary_Table_Row).Interior.ColorIndex = 4
+            
+            ElseIf Year_Change < 0 Then
+                ws.Range("J" & Summary_Table_Row).Interior.ColorIndex = 3
+                
+                    ElseIf Year_Change = 0 Then
+                        ws.Range("J" & Summary_Table_Row).Interior.ColorIndex = 0
+        End If
+        
+     End If
+        
+     
+    'moved to a new empty row in a Summary table
+     Summary_Table_Row = Summary_Table_Row + 1
+    'reset values
+     Ticker_Total = 0
+     Year_Change = 0
+     Start = 2
+        
+    End If
+    
+ Next i
+ 'Find Max/Min/TotalVolume
+ ws.Range("Q2") = "%" & WorksheetFunction.Max(ws.Range("K2:K" & LastRow)) * 100
+ ws.Range("Q3") = "%" & WorksheetFunction.Min(ws.Range("K2:K" & LastRow)) * 100
+ ws.Range("Q4") = WorksheetFunction.Max(ws.Range("L2:L" & LastRow))
+ 
+ 
+ 'LastRowT2 = ws.Cells(Rows.Count, 1).End(xlUp).Row 'Return one less
+ increase_number = WorksheetFunction.Match(WorksheetFunction.Max(ws.Range("K2:K" & LastRow)), ws.Range("K2:K" & LastRow), 0)
+ 
+ Decrease_number = WorksheetFunction.Match(WorksheetFunction.Min(ws.Range("K2:K" & LastRow)), ws.Range("K2:K" & LastRow), 0)
+ volume_number = WorksheetFunction.Match(WorksheetFunction.Max(ws.Range("L2:L" & LastRow)), ws.Range("L2:L" & LastRow), 0)
+ 
+ 'Final ticker symbol for Inc,Dec, total
+ ws.Range("P2") = ws.Cells(increase_number + 1, 9)
+ ws.Range("P3") = ws.Cells(Decrease_number + 1, 9)
+ ws.Range("P4") = ws.Cells(volume_number + 1, 9)
+  
+  
+ Next ws
+End Sub
+
+
+
